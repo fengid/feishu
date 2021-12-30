@@ -13,6 +13,8 @@ type InteractiveV1CardUpdateParam struct {
 
 type InteractiveV1CardUpdateCardParam struct {
 	OpenIds  []string `json:"open_ids"`
+	Config   interface{}
+	Header   interface{}
 	Elements interface{}
 }
 
