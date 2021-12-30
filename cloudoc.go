@@ -62,6 +62,7 @@ type GetFolderChildrenRequest struct {
 }
 
 type GetFolderChildrenResponse struct {
+	Response
 	Data struct {
 		ParentToken string                  `json:"parentToken"`
 		Children    map[string]ChildrenInfo `json:"children"`
@@ -178,6 +179,7 @@ type AddPermissionRequest struct {
 }
 
 type AddPermissionResponse struct {
+	Response
 	Data struct {
 		Member struct {
 			MemberId   string `json:"member_id"`
