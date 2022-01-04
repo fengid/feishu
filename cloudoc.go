@@ -440,6 +440,33 @@ func (c *Client) OperationSheet(args *OperationSheetRequest) (*OperationSheetRes
 	return response, nil
 }
 
+type DeleteSheetResponse struct {
+	Response
+	Data struct {
+		Id     string `json:"id"`
+		Result bool   `json:"result"`
+	} `json:"data"`
+}
+
+// DeleteSheet 删除工作表
+func (c *Client) DeleteSheet(spreadsheetToken string) (*DeleteSheetResponse, error) {
+	request, _ := http.NewRequest(http.MethodDelete, ServerUrl+"/open-apis/drive/explorer/v2/file/spreadsheets/"+spreadsheetToken,nil)
+	AccessToken, err := c.TokenManager.GetAccessToken()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.Do(request, AccessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteSheetResponse{}
+	if err = jsoniter.Unmarshal(resp, response); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
 /***************** 行列数据操作 *************************/
 
 type ReadRangeRequest struct {
