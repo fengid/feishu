@@ -48,7 +48,7 @@ func TestAddPermission(t *testing.T) {
 		MemberType: feishu.OPEN_ID,
 		MemberId: "ou_0ddcdd365511f763385a916757bc7f93",
 		Perm: feishu.EDIT,
-		FileToken: "shtcnvPpGKEHsJFst0L7bQwu9pd",
+		FileToken: "shtcnOzEN2n9JbSf6kMsWXBhROg",
 	}
 	res, err := Client.AddPermission(args)
 	if err != nil {
@@ -89,12 +89,12 @@ func TestGetSheetInfo(t *testing.T) {
 func TestOperationSheet(t *testing.T) {
 	add := &feishu.AddSheet{
 		Properties: feishu.Properties{
-			Title: "13月",
+			Title: "1月",
 			Index: feishu.MexSheet,
 		},
 	}
 	args := &feishu.OperationSheetRequest{
-		SpreadsheetToken: "shtcnvPpGKEHsJFst0L7bQwu9pd",
+		SpreadsheetToken: "shtcnOzEN2n9JbSf6kMsWXBhROg",
 		Requests: []feishu.OperationObject{
 			{AddSheet: add},
 		},
@@ -106,6 +106,31 @@ func TestOperationSheet(t *testing.T) {
 
 	log.Println(res)
 }
+
+// 写某个范围的数据
+func TestWriteRange(t *testing.T) {
+	args := &feishu.WriteRangeRequest{
+		SpreadsheetToken: "shtcnOzEN2n9JbSf6kMsWXBhROg",
+		ValueRange: feishu.ValueRange{
+			Range: "grWwM",
+			Values: [][]interface{}{
+				{1, 2, 3, 4, 5, 6, 7, 8, 9},
+				{1, 2, 3, 4, 5, 6, 7, 8, 9},
+				{1, 2, 3, 4, 5, 6, 7, 8, 9},
+				{1, 2, 3, 4, 5, 6, 7, 8, 9},
+				{1, 2, 3, 4, 5, 6, 7, 8, 9},
+				{1, 2, 3, 4, 5, 6, 7, 8, 9},
+			},
+		},
+	}
+	res, err := Client.WriteRange(args)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println(res)
+}
+
 
 // 读取某个范围的数据
 func TestReadRange(t *testing.T) {
@@ -321,4 +346,48 @@ func TestGetFolderChildren(t *testing.T) {
 		log.Println(child.Token)
 		time.Sleep(time.Second)
 	}
+}
+
+// 更新工作表属性
+func TestSheetBatchUpdate(t *testing.T) {
+	args := &feishu.SheetBatchUpdateRequest{
+		SpreadsheetToken: "shtcnOzEN2n9JbSf6kMsWXBhROg",
+		Requests: []feishu.UpdateSheetRequests{
+			{UpdateSheet: feishu.UpdateSheet{
+				UpdateSheetProperties: feishu.UpdateSheetProperties{
+					SheetId: "grWwM",
+					FrozenRowCount: 4,
+					FrozenColCount: 1,
+				},
+			}},
+		},
+	}
+	res, err := Client.SheetBatchUpdate(args)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println(res)
+}
+
+// 更新行列
+func TestDimensionRange(t *testing.T) {
+	args := &feishu.DimensionRangeRequest{
+		SpreadsheetToken: "shtcnOzEN2n9JbSf6kMsWXBhROg",
+		Dimension: feishu.Dimension{
+			SheetId: "grWwM",
+			MajorDimension: feishu.COLUMNS,
+			StartIndex: 2,
+			EndIndex: 10,
+		},
+		DimensionProperties: feishu.DimensionProperties{
+			FixedSize: 150,
+		},
+	}
+	res, err := Client.DimensionRange(args)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println(res)
 }
