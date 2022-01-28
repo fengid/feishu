@@ -3,7 +3,6 @@ package feishu
 import (
 	"bytes"
 	"github.com/json-iterator/go"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -418,7 +417,7 @@ func (c *Client) OperationSheet(args *OperationSheetRequest) (*OperationSheetRes
 	if err != nil {
 		return nil, err
 	}
-	log.Println(string(body))
+
 	buff := bytes.NewBuffer(body)
 	request, _ := http.NewRequest(http.MethodPost, ServerUrl+"/open-apis/sheets/v2/spreadsheets/"+
 		args.SpreadsheetToken+"/sheets_batch_update", buff)
@@ -437,6 +436,116 @@ func (c *Client) OperationSheet(args *OperationSheetRequest) (*OperationSheetRes
 		return nil, err
 	}
 
+	return response, nil
+}
+
+type DeleteSheetResponse struct {
+	Response
+	Data struct {
+		Id     string `json:"id"`
+		Result bool   `json:"result"`
+	} `json:"data"`
+}
+
+// DeleteSheet 删除工作表
+func (c *Client) DeleteSheet(spreadsheetToken string) (*DeleteSheetResponse, error) {
+	request, _ := http.NewRequest(http.MethodDelete, ServerUrl+"/open-apis/drive/explorer/v2/file/spreadsheets/"+spreadsheetToken,nil)
+	AccessToken, err := c.TokenManager.GetAccessToken()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.Do(request, AccessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteSheetResponse{}
+	if err = jsoniter.Unmarshal(resp, response); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+type SheetBatchUpdateRequest struct {
+	SpreadsheetToken string `json:"-"`
+	UserIdType string `json:"-"`
+	Requests []UpdateSheetRequests `json:"requests"`
+}
+
+type UpdateSheetRequests struct {
+	UpdateSheet `json:"updateSheet"`
+}
+
+type UpdateSheet struct {
+	UpdateSheetProperties`json:"properties"`
+}
+
+type UpdateSheetProperties struct {
+	SheetId        string `json:"sheetId"`
+	Title          string `json:"title"`
+	Index          int `json:"index"`
+	Hidden         bool `json:"hidden"`
+	FrozenColCount int `json:"frozenColCount"`
+	FrozenRowCount int `json:"frozenRowCount"`
+	Protect        struct {
+		Lock     string   `json:"lock"`
+		LockInfo string   `json:"lockInfo"`
+		UserIds  []int64 `json:"userIds"`
+		UserIDs  []string `json:"userIDs"`
+	}
+}
+
+type SheetBatchUpdateResponse struct {
+	Response
+	Data struct {
+		Replies []struct {
+			UpdateSheet struct {
+				Properties struct {
+					SheetId        string `json:"sheetId"`
+					Title          string `json:"title"`
+					Index          int    `json:"index"`
+					Hidden         bool   `json:"hidden"`
+					FrozenColCount int    `json:"frozenColCount"`
+					FrozenRowCount int    `json:"frozenRowCount"`
+					Protect        struct {
+						Lock      string   `json:"lock"`
+						SheetName string   `json:"sheetName"`
+						PermId    string   `json:"permId"`
+						UserIDs   []string `json:"userIDs"`
+					} `json:"protect"`
+				} `json:"properties"`
+			} `json:"updateSheet"`
+		} `json:"replies"`
+	} `json:"data"`
+}
+
+
+// SheetBatchUpdate 更新工作表属性
+func (c *Client) SheetBatchUpdate(args *SheetBatchUpdateRequest) (*SheetBatchUpdateResponse, error) {
+	parma := &url.Values{}
+	parma.Add("user_id_type", args.UserIdType)
+
+	body, err := jsoniter.Marshal(args)
+	if err != nil {
+		return nil, err
+	}
+
+	buff := bytes.NewBuffer(body)
+	request, _ := http.NewRequest(http.MethodPost, ServerUrl+"/open-apis/sheets/v2/spreadsheets/"+
+		args.SpreadsheetToken +"/sheets_batch_update?"+parma.Encode(), buff)
+	AccessToken, err := c.TokenManager.GetAccessToken()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.Do(request, AccessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SheetBatchUpdateResponse{}
+	if err = jsoniter.Unmarshal(resp, response); err != nil {
+		return nil, err
+	}
 	return response, nil
 }
 
@@ -760,6 +869,49 @@ func (c *Client) InsertDimensionRange(args *InsertDimensionRangeRequest) (*Inser
 	}
 
 	response := &InsertDimensionRangeResponse{}
+	if err = jsoniter.Unmarshal(resp, response); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+type DimensionRangeRequest struct {
+	SpreadsheetToken string `json:"-"`
+	Dimension Dimension `json:"dimension"`
+	DimensionProperties  DimensionProperties `json:"dimensionProperties"`
+}
+
+type DimensionProperties struct {
+	Visible   bool `json:"visible"`
+	FixedSize int  `json:"fixedSize"`
+}
+
+type DimensionRangeResponse struct {
+	Response
+	Msg string `json:"msg"`
+}
+
+
+// DimensionRange 更新行列
+func(c *Client)  DimensionRange(args *DimensionRangeRequest) (*DimensionRangeResponse, error) {
+	body, err := jsoniter.Marshal(args)
+	if err != nil {
+		return nil, err
+	}
+	buff := bytes.NewBuffer(body)
+	request, _ := http.NewRequest(http.MethodPut, ServerUrl+"/open-apis/sheets/v2/spreadsheets/"+
+		args.SpreadsheetToken + "/dimension_range", buff)
+
+	AccessToken, err := c.TokenManager.GetAccessToken()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.Do(request, AccessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DimensionRangeResponse{}
 	if err = jsoniter.Unmarshal(resp, response); err != nil {
 		return nil, err
 	}
